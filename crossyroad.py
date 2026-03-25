@@ -1,7 +1,7 @@
 # Imports
 import pygame
 import random
-import json
+import highscore
 
 # Initialisierung der Pygame-Module
 pygame.init()
@@ -46,8 +46,6 @@ AUTO_HOEHE = 40
 clock = pygame.time.Clock()
 
 # Highscoreliste
-highscores = []
-max_highscores_anzahl = 10
 highscore_anzeige_modus = False
 
 
@@ -204,52 +202,6 @@ def text_anzeigen(text_string, groesse, position):
     FENSTER.blit(text, position)
 
 
-def highscore_hinzufügen(name, neuer_score):
-    global highscores
-
-    # Neuen Score zu Zahl umwandeln
-    neuer_score = int(neuer_score)
-
-    # Name und Score zur Highscoreliste hinzufügen
-    highscores.append({"name": name, "score": neuer_score})
-
-    # Highscores sortieren
-    for i in range(len(highscores)):
-        for j in range(i + 1, len(highscores)):
-            if highscores[j]["score"] > highscores[i]["score"]:
-                highscores[i], highscores[j] = highscores[j], highscores[i]
-    
-    # Highscoreliste auf max Anzahl kürzen
-    highscores = highscores[:max_highscores_anzahl]
-
-    # Speichern
-    highscore_liste_speichern()
-    
-
-def highscores_anzeigen():
-    y_position = 200
-
-    # Tabelle zeichnen
-    for highscore in highscores:
-        platzierung = highscores.index(highscore) + 1
-        name = highscore["name"]
-        score = highscore["score"]
-        text = str(platzierung) + ". " + name + " - " + str(score)
-        text_anzeigen(text, 60, (BREITE // 2 - 150, y_position))
-        y_position += 70
-
-
-def highscore_liste_speichern():
-    with open("crossyroad_highscores.json", "w") as datei:
-        json.dump(highscores, datei)
-
-
-def highscore_liste_laden():
-    global highscores
-    with open("crossyroad_highscores.json", "r") as datei:
-        highscores = json.load(datei)
-
-
 def reset_game():
     # Variablen global machen
     global spieler_x, spieler_y, auto_positionen, strasse_richtungen
@@ -303,14 +255,18 @@ def reset_game():
             intervall_festlegen(zeile)
 
 
-# Highscores aus Datei laden
-try:
-    highscore_liste_laden()
-    
-    for highscore in highscores:
-        highscore["score"] = int(highscore["score"])
-except:
-    highscore_liste_speichern()
+def highscores_anzeigen():
+    y_position = 200
+
+    # Tabelle zeichnen
+    for highscore in highscore.highscores:
+        platzierung = highscore.highscores.index(highscore) + 1
+        name = highscore["name"]
+        score = highscore["score"]
+        text = str(platzierung) + ". " + name + " - " + str(score)
+        text_anzeigen(text, 60, (BREITE // 2 - 150, y_position))
+        y_position += 70
+
 
 # Name
 name = ""
@@ -345,7 +301,7 @@ while running:
             if game_over and name_eingabe:
 
                 if event.key == pygame.K_RETURN:
-                    highscore_hinzufügen(name, score)
+                    highscore.highscore_hinzufügen(name, score)
                     name_eingabe = False
                     name = ""
 
@@ -415,7 +371,7 @@ while running:
 
     if game_over and not top_10_gecheckt:
         # Prüfen, ob Score in Top 10 ist
-        if len(highscores) < max_highscores_anzahl or score > highscores[-1]["score"]:
+        if len(highscore.highscores) < highscore.max_highscores_anzahl or score > highscore.highscores[-1]["score"]:
             name_eingabe = True
 
         else:
