@@ -2,6 +2,8 @@
 import pygame
 import random
 import highscore
+from spieler import Spieler
+from autos import Auto
 
 # Initialisierung der Pygame-Module
 pygame.init()
@@ -34,14 +36,6 @@ wasser = "lightblue"
 # Bodenarten Liste
 BODEN = [gras, strasse, wasser]
 
-# Spielergrösse
-SPIELER_BREITE = 40
-SPIELER_HOEHE = 40
-
-# Autogrösse
-AUTO_BREITE = 40
-AUTO_HOEHE = 40 
-
 # Uhr für die FPS
 clock = pygame.time.Clock()
 
@@ -73,18 +67,15 @@ def spielfeld():
         pygame.draw.rect(FENSTER, farbe, quadrat)
     
     # Autopositionen durchgehen
-    for auto_pos in auto_positionen:
-        auto_x = auto_pos[0]
-        auto_y = auto_pos[1]
-
+    for auto in autos:
         # Auto erstellen
-        quadrat = pygame.Rect(auto_x, auto_y + y_verschiebung, AUTO_BREITE, AUTO_HOEHE)
+        quadrat = pygame.Rect(auto.x, auto.y + y_verschiebung, Auto.breite, Auto.hoehe)
 
         # Auto zeichnen 
         pygame.draw.rect(FENSTER, "blue", quadrat)  
 
     # Spieler erstellen
-    quadrat = pygame.Rect(spieler_x, spieler_y, SPIELER_BREITE, SPIELER_HOEHE)
+    quadrat = pygame.Rect(spieler.x, spieler.y, spieler.breite, spieler.hoehe)
 
     # Spieler zeichnen
     pygame.draw.rect(FENSTER, "red", quadrat)
@@ -104,11 +95,11 @@ def strasse_befüllen(zeile):
         # Random Y Position
         auto_y = zeile * QUADRAT_HOEHE + QUADRAT_HOEHE / 10 - y_verschiebung
 
-        # Auto zur Liste hinzufügen
-        auto_positionen.append((auto_x, auto_y))
-
         # Richtung der Strasse speichern für spätere Autos
         strasse_richtungen[zeile] = richtung
+        
+        # Auto zur Liste hinzufügen
+        autos.append(Auto(auto_x, auto_y, richtung))
 
 
 def intervall_festlegen(zeile):
@@ -139,49 +130,39 @@ def auto_spawnen():
             if timer_runterzaehlen(zeile):
                 # Richtung der Strasse holen
                 richtung = strasse_richtungen[zeile]
+
                 # Auto an der Seite spawnen
                 if richtung == 1:
-                    auto_x = -AUTO_BREITE
+                    auto_x = -Auto.breite
                 
                 else:
-                    auto_x = BREITE + AUTO_BREITE
+                    auto_x = BREITE + Auto.breite
                 
                 # Auto Y Position festlegen
                 auto_y = zeile * QUADRAT_HOEHE + QUADRAT_HOEHE / 10 - y_verschiebung
 
                 # Auto zur Liste hinzufügen
-                auto_positionen.append((auto_x, auto_y))
+                autos.append(Auto(auto_x, auto_y, richtung))
 
 
 def kollision_erkennen():
     # Spieler Rechteck holen
-    spieler_rechteck = pygame.Rect(spieler_x, spieler_y, SPIELER_BREITE, SPIELER_HOEHE)
+    spieler_rechteck = pygame.Rect(spieler.x, spieler.y, spieler.breite, spieler.hoehe)
 
     # Autos durchgehen und Kollision prüfen
-    for auto in range(len(auto_positionen)):
-        auto_x, auto_y = auto_positionen[auto]
-        auto_rechteck = pygame.Rect(auto_x, auto_y + y_verschiebung, AUTO_BREITE, AUTO_HOEHE)
+    for auto in autos:
+        auto_rechteck = pygame.Rect(auto.x, auto.y + y_verschiebung, auto.breite, auto.hoehe)
 
         # Kollision prüfen
-        kollision = spieler_rechteck.colliderect(auto_rechteck)
-        if kollision:
+        if spieler_rechteck.colliderect(auto_rechteck):
             return True
     
     return False
 
 
 def auto_bewegen():
-    for auto in range(len(auto_positionen)):
-        # Zeile und Richtung holen
-        zeile = (auto_positionen[auto][1] + y_verschiebung) // QUADRAT_HOEHE
-        richtung = strasse_richtungen[zeile]
-
-        # Auto Position updaten
-        auto_x, auto_y = auto_positionen[auto]
-        auto_x += richtung
-
-        # geänderte Position speichern
-        auto_positionen[auto] = (auto_x, auto_y)
+    for auto in autos:
+        auto.bewegen()
 
 
 def score_anzeigen(groesse, position):
@@ -204,16 +185,18 @@ def text_anzeigen(text_string, groesse, position):
 
 def reset_game():
     # Variablen global machen
-    global spieler_x, spieler_y, auto_positionen, strasse_richtungen
+    global spieler, autos, strasse_richtungen
     global strasse_timer, strasse_intervalle, spielfeld_map
     global y_verschiebung, score, frame_count, running, game_over, top_10_gecheckt
 
     # Spielerposition zurücksetzen
-    spieler_x = 10 * QUADRAT_BREITE + QUADRAT_BREITE / 10
-    spieler_y = 10 * QUADRAT_HOEHE + QUADRAT_HOEHE / 10
+    start_x = 10 * QUADRAT_BREITE + QUADRAT_BREITE / 10
+    start_y = 10 * QUADRAT_HOEHE + QUADRAT_HOEHE / 10
+
+    spieler = Spieler(start_x, start_y)
 
     # Alle Listen und Dictionaries leeren
-    auto_positionen = []
+    autos = []
     strasse_richtungen = {}
     strasse_timer = {}
     strasse_intervalle = {}
@@ -324,7 +307,7 @@ while running:
                 if event.key == pygame.K_w or event.key == pygame.K_UP:
 
                     # Überprüfen, ob Spielfeld verschoben werden muss
-                    if spieler_y <= 10 * QUADRAT_HOEHE:
+                    if spieler.y <= 10 * QUADRAT_HOEHE:
 
                         # Spielfeld verschieben
                         y_verschiebung += QUADRAT_HOEHE
@@ -354,19 +337,19 @@ while running:
 
                     # Spieler normal bewegen
                     else:
-                        spieler_y -= QUADRAT_HOEHE
+                        spieler.bewegen(0, -QUADRAT_HOEHE)
 
                 # Unten
                 if event.key == pygame.K_s or event.key == pygame.K_DOWN:           
-                    spieler_y += QUADRAT_HOEHE
+                    spieler.bewegen(0, QUADRAT_HOEHE)
                 
                 # Links
                 if event.key == pygame.K_a or event.key == pygame.K_LEFT:           
-                    spieler_x -= QUADRAT_BREITE
+                    spieler.bewegen(-QUADRAT_BREITE, 0)
                 
                 # Rechts
                 if event.key == pygame.K_d or event.key == pygame.K_RIGHT:           
-                    spieler_x += QUADRAT_BREITE
+                    spieler.bewegen(QUADRAT_BREITE, 0)
 
     if game_over and not top_10_gecheckt:
         # Prüfen, ob Score in Top 10 ist
