@@ -259,10 +259,9 @@ def highscores_anzeigen():
     y_position = 200
 
     # Tabelle zeichnen
-    for highscore in highscore.highscores:
-        platzierung = highscore.highscores.index(highscore) + 1
-        name = highscore["name"]
-        score = highscore["score"]
+    for i, h in enumerate(highscore.top_10_laden()):
+        platzierung = i + 1
+        name, score = h
         text = str(platzierung) + ". " + name + " - " + str(score)
         text_anzeigen(text, 60, (BREITE // 2 - 150, y_position))
         y_position += 70
@@ -371,7 +370,7 @@ while running:
 
     if game_over and not top_10_gecheckt:
         # Prüfen, ob Score in Top 10 ist
-        if len(highscore.highscores) < highscore.max_highscores_anzahl or score > highscore.highscores[-1]["score"]:
+        if highscore.ist_top_10(score):
             name_eingabe = True
 
         else:
