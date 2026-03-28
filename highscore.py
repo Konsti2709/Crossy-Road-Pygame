@@ -42,4 +42,4 @@ def ist_top_10(score):
     if len(top_10_scores) < 10:
         return True
     
-    return score > top_10_scores[-1][0]
+    return score > top_10_scores[-1][1]
