@@ -3,6 +3,7 @@ import pygame
 import spielfeld
 import highscore
 from spieler import Spieler
+from strassen import Strasse
 
 # Initialisierung der Pygame-Module
 pygame.init()
@@ -58,17 +59,16 @@ def reset_game():
 
     spieler = Spieler(start_x, start_y)
 
-    # Alle Listen und Dictionaries leeren
-    autos = []
-
     # Verschiebung und Score zurücksetzen
     score = 0
     frame_count = 0
     running = True
     game_over = False
     top_10_gecheckt = False
+
+    spielfeld.reset()
     
-    spielfeld.neu_generieren(FENSTER, QUADRAT_HOEHE, QUADRAT_BREITE, autos)
+    spielfeld.neu_generieren(FENSTER, QUADRAT_HOEHE, QUADRAT_BREITE)
 
 
 def highscores_anzeigen():
@@ -142,7 +142,7 @@ while running:
                     # Überprüfen, ob Spielfeld verschoben werden muss
                     if spieler.y <= 10 * QUADRAT_HOEHE:
                         score += 1
-                        spielfeld.hochgehen(QUADRAT_BREITE, QUADRAT_HOEHE, autos)
+                        spielfeld.hochgehen(QUADRAT_BREITE, QUADRAT_HOEHE)
 
                     # Spieler normal bewegen
                     else:
@@ -172,17 +172,18 @@ while running:
 
     if not game_over:
         # Falls Kollision, Spiel beenden
-        if spielfeld.kollision_erkennen(spieler, autos):
+        if spielfeld.kollision_erkennen(spieler):
             game_over = True
         
-        # Autos bewegen
-        spielfeld.auto_bewegen(autos)
+        for strasse in spielfeld.strassen:
+            # Autos bewegen
+            strasse.auto_bewegen()
 
-        # Autos spawnen
-        spielfeld.auto_spawnen(QUADRAT_BREITE, QUADRAT_HOEHE, autos)
+            # Autos spawnens
+            strasse.auto_spawnen(SPIELFELD_BREITE)
 
         # Spielfeld neu zeichnen
-        spielfeld.generieren(FENSTER, QUADRAT_HOEHE, QUADRAT_BREITE, autos, spieler)
+        spielfeld.generieren(FENSTER, QUADRAT_HOEHE, QUADRAT_BREITE, spieler)
 
         # Score anzeigen
         score_anzeigen(50, (10, 10))
