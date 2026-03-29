@@ -146,19 +146,19 @@ while running:
 
                     # Spieler normal bewegen
                     else:
-                        spieler.bewegen(0, -QUADRAT_HOEHE)
+                        spieler.bewegen(0, -QUADRAT_HOEHE, BREITE, HOEHE)
 
                 # Unten
                 if event.key == pygame.K_s or event.key == pygame.K_DOWN:           
-                    spieler.bewegen(0, QUADRAT_HOEHE)
+                    spieler.bewegen(0, QUADRAT_HOEHE, BREITE, HOEHE)
                 
                 # Links
                 if event.key == pygame.K_a or event.key == pygame.K_LEFT:           
-                    spieler.bewegen(-QUADRAT_BREITE, 0)
+                    spieler.bewegen(-QUADRAT_BREITE, 0, BREITE, HOEHE)
                 
                 # Rechts
                 if event.key == pygame.K_d or event.key == pygame.K_RIGHT:           
-                    spieler.bewegen(QUADRAT_BREITE, 0)
+                    spieler.bewegen(QUADRAT_BREITE, 0, BREITE, HOEHE)
 
     if game_over and not top_10_gecheckt:
         # Prüfen, ob Score in Top 10 ist

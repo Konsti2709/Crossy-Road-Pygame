@@ -44,7 +44,7 @@ def generieren(FENSTER, QUADRAT_HOEHE, QUADRAT_BREITE, autos, spieler):
     # Autopositionen durchgehen
     for auto in autos:
         # Auto erstellen
-        quadrat = pygame.Rect(auto.x, auto.y + y_verschiebung, Auto.breite, Auto.hoehe)
+        quadrat = pygame.Rect(auto.x, auto.y + y_verschiebung, auto.breite, auto.hoehe)
 
         # Auto zeichnen 
         pygame.draw.rect(FENSTER, "blue", quadrat)  
@@ -88,21 +88,39 @@ def strasse_befüllen(zeile, QUADRAT_BREITE, QUADRAT_HOEHE, autos):
     # Random Anzahl Autos und Richtung
     anzahl_autos = random.randint(4, 6)
     richtung = random.choice([-1, 1])
+    autos_in_der_zeile = []
 
     # Autos setzen
     for auto in range(anzahl_autos):
-
-        # Random X Position
-        auto_x = random.randint(0, SPIELFELD_BREITE) * QUADRAT_BREITE + QUADRAT_BREITE / 10
         
-        # Random Y Position
+
+        max_versuche = 20
+
         auto_y = zeile * QUADRAT_HOEHE + QUADRAT_HOEHE / 10 - y_verschiebung
 
-        # Richtung der Strasse speichern für spätere Autos
-        strasse_richtungen[zeile] = richtung
+        for _ in range(max_versuche):
+            auto_x = random.randint(0, SPIELFELD_BREITE) * QUADRAT_BREITE + QUADRAT_BREITE / 10
+            neues_auto = Auto(auto_x, auto_y, richtung)
+
+            neues_rechteck = pygame.Rect(neues_auto.x, neues_auto.y, neues_auto.breite, neues_auto.hoehe)
+
+            kollidiert = False
+
+            for anderes_auto in autos_in_der_zeile:
+                anderes_rechteck = pygame.Rect(anderes_auto.x, anderes_auto.y, anderes_auto.breite, anderes_auto.hoehe)
+
+                if neues_rechteck.colliderect(anderes_rechteck):
+                      kollidiert = True
+                      break
+                
+            if not kollidiert:
+                autos_in_der_zeile.append(neues_auto)
+                autos.append(neues_auto)
+                break
         
-        # Auto zur Liste hinzufügen
-        autos.append(Auto(auto_x, auto_y, richtung))
+
+    # Richtung der Strasse speichern für spätere Autos
+    strasse_richtungen[zeile] = richtung
 
 
 def intervall_festlegen(zeile):
@@ -134,18 +152,23 @@ def auto_spawnen(QUADRAT_BREITE, QUADRAT_HOEHE, autos):
                 # Richtung der Strasse holen
                 richtung = strasse_richtungen[zeile]
 
+                auto = Auto(0, 0, richtung)
+
                 # Auto an der Seite spawnen
                 if richtung == 1:
-                    auto_x = -Auto.breite
+                    auto_x = -auto.breite
                 
                 else:
-                    auto_x = SPIELFELD_BREITE * QUADRAT_BREITE + Auto.breite
+                    auto_x = SPIELFELD_BREITE * QUADRAT_BREITE + auto.breite
                 
                 # Auto Y Position festlegen
                 auto_y = zeile * QUADRAT_HOEHE + QUADRAT_HOEHE / 10 - y_verschiebung
 
+                auto.x = auto_x
+                auto.y = auto_y
+
                 # Auto zur Liste hinzufügen
-                autos.append(Auto(auto_x, auto_y, richtung))
+                autos.append(auto)
 
 
 def kollision_erkennen(spieler, autos):
