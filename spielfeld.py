@@ -60,7 +60,10 @@ def neu_generieren(FENSTER, QUADRAT_HOEHE, QUADRAT_BREITE, autos):
     for zeile in range(SPIELFELD_HOEHE):
         
         # Farbe und Feld festlegen
-        feld = random.choice(BODEN)
+        if zeile >= 10:
+            feld = gras
+        else:
+            feld = random.choice(BODEN)
         if feld == gras:
             farbe = gras
         elif feld == strasse:
